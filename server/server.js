@@ -30,8 +30,6 @@ app.get('/todos', (req, res) => {
   });
 });
 
-//GET /todos/:id
-
 app.get('/todos/:id', (req,res) => {
   var id = req.params.id;
   if(!ObjectID.isValid(id)) {
