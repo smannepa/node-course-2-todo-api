@@ -1,7 +1,7 @@
 const {ObjectID} = require('mongodb');
-
-var express = require('express');
-var bodyParser = require('body-parser');
+const _ = require('lodash');
+const express = require('express');
+const bodyParser = require('body-parser');
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
@@ -43,10 +43,6 @@ app.get('/todos/:id', (req,res) => {
   }).catch((e) => res.status(400).send());
 });
 
-app.listen(port, () => {
-  console.log(`Started on port ${port}`);
-});
-
 app.delete('/todos/:id', (req, res) => {
   var id = req.params.id;
   if(!ObjectID.isValid(id)) {
@@ -58,6 +54,36 @@ app.delete('/todos/:id', (req, res) => {
     }
     res.status(200).send({todo});
   }).catch((e) => res.status(400).send());
+});
+
+app.patch('/todos/:id', (req, res) => {
+  var id = req.params.id;
+  //this is to limit updates to the properties we want to be updates
+  var body = _.pick(req.body, ['text', 'completed']);
+  if(!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  if(_.isBoolean(body.completed) && body.completed) {
+    //if todo is completed, update completed time
+    body.completedAt = new Date().getTime();
+  } else {
+    body.completedAt = null;
+    body.completed = false;
+  }
+
+  Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+    if(!todo) {
+      return res.status(404).send();
+    }
+    res.send({todo});
+  }).catch((e) => {
+    res.status(400).send();
+  });
+});
+
+app.listen(port, () => {
+  console.log(`Started on port ${port}`);
 });
 
 module.exports = {app};
