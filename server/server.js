@@ -23,6 +23,7 @@ app.post('/todos', (req, res) => {
     res.status(400).send(e);
   });
 });
+
 app.get('/todos', (req, res) => {
   Todo.find().then((todos) => {
     res.send({todos});
@@ -80,6 +81,21 @@ app.patch('/todos/:id', (req, res) => {
     res.send({todo});
   }).catch((e) => {
     res.status(400).send();
+  });
+});
+
+app.post('/users', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+  var user = new User (body);
+
+  user.save().then(() => {
+    return user.generateAuthToken();
+  }).then((token) => {
+    //send a customer header named x-auth and associate the token generated for
+    //the user
+    res.header('x-auth',token).send(user);
+  }).catch((e) => {
+    res.status(400).send(e);
   });
 });
 
